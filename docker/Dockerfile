@@ -1,9 +1,9 @@
-# Outdated Alpine base containing multiple known CVEs
-FROM alpine:3.10
+# Modern, actively patched base image with unprivileged execution
+FROM alpine:3.20
 
-USER root
+RUN addgroup -S appgroup && adduser -S appuser -G appgroup
+RUN apk update && apk upgrade --no-cache && apk add --no-cache ca-certificates
 
-RUN apk update && apk add --no-cache curl python2 bash
-
-WORKDIR /app
+USER appuser
+WORKDIR /home/appuser
 CMD ["/bin/sh"]

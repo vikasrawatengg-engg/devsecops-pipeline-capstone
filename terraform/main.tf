@@ -13,26 +13,44 @@ provider "aws" {
   skip_requesting_account_id  = true
 }
 
-# VIOLATION 1: S3 bucket configured with public-read ACL
-# VIOLATION 2: S3 bucket missing server-side encryption
+# REMEDIATION: Private bucket with public access block and AES-256 encryption
 resource "aws_s3_bucket" "financial_data_lake" {
   bucket = "enterprise-confidential-financial-records-2026"
-  acl    = "public-read"
 
   tags = {
-    Environment = "Dev"
+    Environment = "Production"
+    Compliance  = "CIS-Benchmark"
   }
 }
 
-# VIOLATION 3: Unrestricted management ingress (0.0.0.0/0 on SSH port 22)
+resource "aws_s3_bucket_server_side_encryption_configuration" "s3_enc" {
+  bucket = aws_s3_bucket.financial_data_lake.id
+
+  rule {
+    apply_server_side_encryption_by_default {
+      sse_algorithm = "AES256"
+    }
+  }
+}
+
+resource "aws_s3_bucket_public_access_block" "s3_block" {
+  bucket                  = aws_s3_bucket.financial_data_lake.id
+  block_public_acls       = true
+  block_public_policy     = true
+  ignore_public_acls      = true
+  restrict_public_buckets = true
+}
+
+# REMEDIATION: Ingress restricted strictly to corporate management subnet
 resource "aws_security_group" "management_ssh" {
   name        = "allow_management_ssh"
-  description = "Open SSH access"
+  description = "Restricted corporate SSH access"
 
   ingress {
+    description = "Corporate SSH Bastion Ingress"
     from_port   = 22
     to_port     = 22
     protocol    = "tcp"
-    cidr_blocks = ["0.0.0.0/0"]
+    cidr_blocks = ["10.0.10.0/24"]
   }
 }

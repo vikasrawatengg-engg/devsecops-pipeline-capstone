@@ -31,16 +31,16 @@ jobs:
       - name: "Step 4: Checkov Policy-as-Code Analysis"
         uses: bridgecrewio/checkov-action@master
         with:
-          directory: terraform
+          file: terraform/main.tf
           framework: terraform
           output_format: cli
-          soft_fail: true # Temporarily soft-fail to allow testing Step 7 (Trivy)
+          soft_fail: false # Enforce zero tolerance on IaC misconfiguration
 
       - name: "Step 5: TFSec Static Infrastructure Scan"
         uses: aquasecurity/tfsec-action@v1.0.0
         with:
           working_directory: terraform
-          soft_fail: true # Temporarily soft-fail to reach Trivy
+          soft_fail: false
 
       - name: "Step 6: Build Container Image for Audit"
         run: |
@@ -51,7 +51,7 @@ jobs:
         with:
           image-ref: "target-service:audit-${{ github.sha }}"
           format: "table"
-          exit-code: "1" # Hard-fail on Critical/High container CVEs
+          exit-code: "1"
           ignore-unfixed: true
           vuln-type: "os,library"
           severity: "CRITICAL,HIGH"
