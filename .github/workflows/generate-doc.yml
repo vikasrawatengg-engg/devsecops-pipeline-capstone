@@ -1,0 +1,28 @@
+name: "Generate Project Report Document"
+
+on:
+  workflow_dispatch:
+
+jobs:
+  build-docx:
+    runs-on: ubuntu-latest
+    steps:
+      - name: "Checkout Code"
+        uses: actions/checkout@v3
+
+      - name: "Set up Python"
+        uses: actions/setup-python@v4
+        with:
+          python-version: "3.11"
+
+      - name: "Install python-docx"
+        run: pip install python-docx
+
+      - name: "Generate Word Document"
+        run: python generate_report.py
+
+      - name: "Upload Report as Artifact"
+        uses: actions/upload-artifact@v4
+        with:
+          name: DevSecOps_Project_Report_Vikas_Rawat
+          path: DevSecOps_Project_Report.docx
