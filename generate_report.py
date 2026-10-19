@@ -2,13 +2,18 @@
 import docx
 from docx.shared import Inches, Pt, RGBColor
 from docx.enum.text import WD_ALIGN_PARAGRAPH
-from docx.enum.table import WD_TABLE_ALIGNMENT, WD_ALIGN_VERTICAL
+from docx.enum.table import WD_TABLE_ALIGNMENT
 from docx.oxml import parse_xml, OxmlElement
 from docx.oxml.ns import nsdecls, qn
 
 doc = docx.Document()
 
-# Formatting: A4, 1.0" on all sides (Section 3.2 item 7)
+# ---------------------------------------------------------------------------
+# Section 3.2: Formatting of the Report
+# Margins: 1.0" on all sides (Top, Bottom, Left, Right)
+# Page size: A4 (8.27" x 11.69")
+# Page numbering: Bottom Center
+# ---------------------------------------------------------------------------
 for section in doc.sections:
     section.top_margin = Inches(1.0)
     section.bottom_margin = Inches(1.0)
@@ -16,7 +21,7 @@ for section in doc.sections:
     section.left_margin = Inches(1.0)
     section.page_width = Inches(8.27)
     section.page_height = Inches(11.69)
-    # Enable footer with page number
+    
     footer = section.footer
     f_p = footer.paragraphs[0]
     f_p.alignment = WD_ALIGN_PARAGRAPH.CENTER
@@ -27,7 +32,6 @@ for section in doc.sections:
     f_run.font.name = 'Times New Roman'
     f_run.font.size = Pt(10)
 
-# Base Style: Times New Roman, 12pt, 1.5 line spacing, Justified
 style = doc.styles['Normal']
 style.font.name = 'Times New Roman'
 style.font.size = Pt(12)
@@ -120,11 +124,11 @@ def create_table(headers, data, col_widths=None):
     doc.add_paragraph()
 
 # =========================================================================
-# ANNEXURE - I: COVER PAGE
+# ANNEXURE - I: COVER PAGE (Strictly as per Annexure-I of Guidelines)
 # =========================================================================
 p = doc.add_paragraph()
 p.alignment = WD_ALIGN_PARAGRAPH.CENTER
-p.paragraph_format.space_before = Pt(20)
+p.paragraph_format.space_before = Pt(10)
 r = p.add_run("Design and Implementation of an Automated DevSecOps Pipeline using Policy-as-Code and Continuous Security Scanning\n\n")
 r.font.name = 'Times New Roman'
 r.font.size = Pt(16)
@@ -161,7 +165,7 @@ p = doc.add_paragraph()
 p.alignment = WD_ALIGN_PARAGRAPH.CENTER
 r = p.add_run("[Affix Lovely Professional University Seal Here]\n\n\n")
 r.font.name = 'Times New Roman'
-r.font.size = Pt(12)
+r.font.size = Pt(11)
 r.italic = True
 
 p = doc.add_paragraph()
@@ -178,7 +182,7 @@ r_yr.bold = True
 doc.add_page_break()
 
 # =========================================================================
-# S.No. 1: DECLARATION BY STUDENT (ANNEXURE - II)
+# S.No. 1: DECLARATION BY STUDENT (Strictly as per Annexure-II of Guidelines)
 # =========================================================================
 add_h1("Annexure - II", center=True)
 add_h1("Declaration by the Student", center=True)
@@ -213,7 +217,7 @@ doc.add_page_break()
 # =========================================================================
 add_h1("ACKNOWLEDGEMENT", center=True)
 add_p("I express my deep sense of gratitude and sincere indebtedness to the Centre for Distance and Online Education, Lovely Professional University, Phagwara, for providing the necessary academic curriculum, technological infrastructure, and learning resources to carry out this capstone engineering project.")
-add_p("I convey my gratitude to my project coordinator and faculty mentors for their regular guidance, structured evaluations, and valuable insights throughout the conceptualization, security policy formulation, and cloud architecture implementation stages.")
+add_p("I convey my heartfelt gratitude to my project coordinator, faculty supervisors, and mentors for their regular guidance, structured evaluations, and valuable insights throughout the conceptualization, security policy formulation, and cloud architecture implementation stages.")
 add_p("I also acknowledge the global open-source DevSecOps community, specifically the maintainers of HashiCorp Terraform, GitHub Actions, Checkov by Palo Alto Networks (Bridgecrew), TFSec by Aqua Security, and the Trivy vulnerability research project. Their robust tools, CIS benchmark definitions, and CVE database feeds formed the functional bedrock of this automated pipeline.")
 
 doc.add_page_break()
@@ -317,7 +321,7 @@ create_table(["Abbreviation", "Meaning"], abbrevs, [1.5, 4.9])
 doc.add_page_break()
 
 # =========================================================================
-# TABLE OF CONTENTS (S.No. 3.5 of Guidelines)
+# S.No. 3.5: TABLE OF CONTENTS (Exact 16-entry guideline sequence)
 # =========================================================================
 add_h1("TABLE OF CONTENTS", center=True)
 toc_items = [
