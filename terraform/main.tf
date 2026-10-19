@@ -13,9 +13,9 @@ provider "aws" {
   skip_requesting_account_id  = true
 }
 
-# 1. Private hardened S3 Bucket
+# 1. Hardened S3 Bucket using dynamic prefix to prevent 409 collisions
 resource "aws_s3_bucket" "financial_data_lake" {
-  bucket = "enterprise-confidential-financial-records-2026"
+  bucket_prefix = "corp-fin-data-"
 
   tags = {
     Environment = "Production"
@@ -51,7 +51,7 @@ resource "aws_s3_bucket_public_access_block" "s3_block" {
 
 # 2. Hardened Management Security Group
 resource "aws_security_group" "management_ssh" {
-  name        = "allow_management_ssh"
+  name_prefix = "mgmt_ssh_"
   description = "Restricted corporate SSH access"
 
   ingress {
@@ -61,11 +61,15 @@ resource "aws_security_group" "management_ssh" {
     protocol    = "tcp"
     cidr_blocks = ["10.0.10.0/24"]
   }
+
+  lifecycle {
+    create_before_destroy = true
+  }
 }
 
 # 3. Web Server Security Group (Allows Port 80 HTTP)
 resource "aws_security_group" "web_sg" {
-  name        = "capstone_web_sg"
+  name_prefix = "web_showcase_"
   description = "Security group for Capstone Web Showcase"
 
   ingress {
@@ -87,6 +91,10 @@ resource "aws_security_group" "web_sg" {
   tags = {
     Name = "DevSecOps-Web-SG"
   }
+
+  lifecycle {
+    create_before_destroy = true
+  }
 }
 
 # 4. Amazon Linux 2023 AMI Lookup
@@ -100,21 +108,19 @@ data "aws_ami" "amazon_linux_2023" {
   }
 }
 
-# 5. EC2 Web Server Instance
+# 5. EC2 Web Server Instance (Using t3.micro for standard Free Tier compliance)
 resource "aws_instance" "web_server" {
   ami                         = data.aws_ami.amazon_linux_2023.id
-  instance_type               = "t2.micro"
+  instance_type               = "t3.micro"
   vpc_security_group_ids      = [aws_security_group.web_sg.id]
   associate_public_ip_address = true
 
-  # Hardened EBS configuration satisfying Checkov CKV_AWS_3 (Encryption at Rest)
   root_block_device {
     encrypted   = true
     volume_size = 20
     volume_type = "gp3"
   }
 
-  # Automated Web Dashboard Bootstrap via User Data
   user_data = <<-EOF
               #!/bin/bash
               dnf update -y
