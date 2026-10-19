@@ -1,0 +1,57 @@
+name: "Automated DevSecOps Pipeline"
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+
+jobs:
+  security-pipeline:
+    name: "Shift-Left Static & Vulnerability Auditing"
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - name: "Step 1: Checkout Source Code"
+        uses: actions/checkout@v3
+
+      - name: "Step 2: Initialize Terraform CLI"
+        uses: hashicorp/setup-terraform@v2
+        with:
+          terraform_version: 1.5.0
+
+      - name: "Step 3: Terraform Lint and Validation"
+        run: |
+          cd terraform
+          terraform fmt -check || true
+          terraform init -backend=false
+          terraform validate
+
+      - name: "Step 4: Checkov Policy-as-Code Analysis"
+        uses: bridgecrewio/checkov-action@master
+        with:
+          directory: terraform
+          framework: terraform
+          output_format: cli
+          soft_fail: false
+
+      - name: "Step 5: TFSec Static Infrastructure Scan"
+        uses: aquasecurity/tfsec-action@v1.0.0
+        with:
+          working_directory: terraform
+          soft_fail: false
+
+      - name: "Step 6: Build Container Image for Audit"
+        run: |
+          docker build -t target-service:audit-${{ github.sha }} -f docker/Dockerfile docker/
+
+      - name: "Step 7: Trivy Container Vulnerability Scan"
+        uses: aquasecurity/trivy-action@master
+        with:
+          image-ref: "target-service:audit-${{ github.sha }}"
+          format: "table"
+          exit-code: "1"
+          ignore-unfixed: true
+          vuln-type: "os,library"
+          severity: "CRITICAL,HIGH"
