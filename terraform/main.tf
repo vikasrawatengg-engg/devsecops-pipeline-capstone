@@ -13,9 +13,9 @@ provider "aws" {
   skip_requesting_account_id  = true
 }
 
-# 1. Hardened S3 Bucket using dynamic prefix to prevent 409 collisions
+# 1. Private hardened S3 Bucket using bucket_prefix to avoid 409 collisions
 resource "aws_s3_bucket" "financial_data_lake" {
-  bucket_prefix = "corp-fin-data-"
+  bucket_prefix = "corp-financial-records-"
 
   tags = {
     Environment = "Production"
@@ -49,9 +49,9 @@ resource "aws_s3_bucket_public_access_block" "s3_block" {
   restrict_public_buckets = true
 }
 
-# 2. Hardened Management Security Group
+# 2. Hardened Management Security Group using name_prefix
 resource "aws_security_group" "management_ssh" {
-  name_prefix = "mgmt_ssh_"
+  name_prefix = "allow_management_ssh_"
   description = "Restricted corporate SSH access"
 
   ingress {
@@ -67,9 +67,9 @@ resource "aws_security_group" "management_ssh" {
   }
 }
 
-# 3. Web Server Security Group (Allows Port 80 HTTP)
+# 3. Web Server Security Group using name_prefix
 resource "aws_security_group" "web_sg" {
-  name_prefix = "web_showcase_"
+  name_prefix = "capstone_web_sg_"
   description = "Security group for Capstone Web Showcase"
 
   ingress {
@@ -108,10 +108,10 @@ data "aws_ami" "amazon_linux_2023" {
   }
 }
 
-# 5. EC2 Web Server Instance (Using t3.micro for standard Free Tier compliance)
+# 5. EC2 Web Server Instance
 resource "aws_instance" "web_server" {
   ami                         = data.aws_ami.amazon_linux_2023.id
-  instance_type               = "t3.micro"
+  instance_type               = "t2.micro"
   vpc_security_group_ids      = [aws_security_group.web_sg.id]
   associate_public_ip_address = true
 
