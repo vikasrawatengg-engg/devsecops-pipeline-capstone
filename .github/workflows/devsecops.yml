@@ -3,8 +3,6 @@ name: "Automated DevSecOps Pipeline"
 on:
   push:
     branches: [ "main" ]
-  pull_request:
-    branches: [ "main" ]
 
 jobs:
   security-pipeline:
@@ -56,3 +54,39 @@ jobs:
           ignore-unfixed: true
           vuln-type: "os,library"
           severity: "CRITICAL,HIGH"
+
+  deploy-infrastructure:
+    name: "Automated Cloud Deployment"
+    needs: security-pipeline
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main'
+
+    steps:
+      - name: "Checkout Source Code"
+        uses: actions/checkout@v3
+
+      - name: "Configure AWS Credentials"
+        uses: aws-actions/configure-aws-credentials@v2
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: "ap-south-1"
+
+      - name: "Setup Terraform CLI"
+        uses: hashicorp/setup-terraform@v2
+        with:
+          terraform_version: 1.5.0
+
+      - name: "Terraform Init & Apply"
+        run: |
+          cd terraform
+          terraform init
+          terraform apply -auto-approve
+
+      - name: "Display Live Web Server Public IP"
+        run: |
+          cd terraform
+          echo "=========================================================="
+          echo "DEPLOYMENT COMPLETE!"
+          echo "Web Server URL: http://$(terraform output -raw web_server_public_ip)"
+          echo "=========================================================="
