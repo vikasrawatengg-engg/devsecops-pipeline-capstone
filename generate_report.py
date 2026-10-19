@@ -1,5 +1,6 @@
+ï»¿# -*- coding: utf-8 -*-
 import docx
-from docx.shared import Inches, Pt, RGBColor
+from docx.shared import Inches, Pt
 from docx.enum.text import WD_ALIGN_PARAGRAPH
 from docx.enum.table import WD_TABLE_ALIGNMENT
 from docx.oxml import parse_xml
@@ -7,7 +8,7 @@ from docx.oxml.ns import nsdecls
 
 doc = docx.Document()
 
-# Formatting: Left Margin = 2.5", Others = 1.0"
+# Formatting: Left Margin = 2.5", Top/Bottom/Right = 1.0"
 for section in doc.sections:
     section.top_margin = Inches(1.0)
     section.bottom_margin = Inches(1.0)
@@ -163,7 +164,7 @@ toc_items = [
     ("8. Chapter-2 Review of Literature", "13"),
     ("9. Chapter-3 Implementation of Project", "17"),
     ("10. Chapter-4 Results and Discussions", "25"),
-    ("11. Final Chapter – Conclusion and Future Scope", "32"),
+    ("11. Final Chapter - Conclusion and Future Scope", "32"),
     ("12. References", "35"),
     ("13. Annexure-I: Project Summary Sheet", "37")
 ]
@@ -206,7 +207,7 @@ doc.add_page_break()
 add_h1("CHAPTER-1: INTRODUCTION")
 add_h2("1.1 Background and Context")
 add_p("Cloud infrastructure management has transitioned from manual server configuration to codified, automated provisioning through Infrastructure as Code (IaC). Declarative frameworks like HashiCorp Terraform allow engineering teams to define virtual private clouds, access control lists, block devices, and compute clusters using version-controlled text files.")
-add_p("While IaC enhances delivery speed, it replicates misconfigurations instantly across enterprise cloud environments. Traditional IT workflows handle security reviews via asynchronous audits right before production cutover. The DevSecOps methodology mitigates this operational barrier by shifting security audits left—validating configurations and container layers within continuous integration runners before deployment.")
+add_p("While IaC enhances delivery speed, it replicates misconfigurations instantly across enterprise cloud environments. Traditional IT workflows handle security reviews via asynchronous audits right before production cutover. The DevSecOps methodology mitigates this operational barrier by shifting security audits left - validating configurations and container layers within continuous integration runners before deployment.")
 
 add_h2("1.2 Problem Statement")
 add_p("Modern cloud security incidents frequently originate from simple infrastructure misconfigurations: unencrypted storage volumes, world-accessible SSH (Port 22) management ingress, and container base images containing known CVE vulnerabilities. To resolve this, continuous deployment pipelines require deterministic security gates that halt provisioning immediately when defined security thresholds are breached.")
