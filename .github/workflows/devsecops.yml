@@ -77,11 +77,11 @@ jobs:
         with:
           terraform_version: 1.5.0
 
-      - name: "Terraform Init & Apply with Instance Replacement"
+      - name: "Terraform Apply (Single Resource State Reconciliation)"
         run: |
           cd terraform
           terraform init
-          terraform apply -replace="aws_instance.web_server" -auto-approve
+          terraform apply -auto-approve
 
       - name: "Display Live Web Server Public IP"
         run: |

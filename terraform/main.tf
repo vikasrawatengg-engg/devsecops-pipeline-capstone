@@ -13,9 +13,10 @@ provider "aws" {
   skip_requesting_account_id  = true
 }
 
-# 1. Private hardened S3 Bucket
+# 1. Single Hardened S3 Data Lake Bucket
 resource "aws_s3_bucket" "financial_data_lake" {
-  bucket_prefix = "corp-fin-data-"
+  bucket        = "capstone-devsecops-data-324200509"
+  force_destroy = true
 
   tags = {
     Environment = "Production"
@@ -49,9 +50,9 @@ resource "aws_s3_bucket_public_access_block" "s3_block" {
   restrict_public_buckets = true
 }
 
-# 2. Hardened Management Security Group
+# 2. Hardened Bastion Security Group
 resource "aws_security_group" "management_ssh" {
-  name_prefix = "allow_management_ssh_"
+  name        = "devsecops-capstone-mgmt-sg"
   description = "Restricted corporate SSH access"
 
   ingress {
@@ -62,14 +63,18 @@ resource "aws_security_group" "management_ssh" {
     cidr_blocks = ["10.0.10.0/24"]
   }
 
-  lifecycle {
-    create_before_destroy = true
+  egress {
+    description = "Outbound egress"
+    from_port   = 0
+    to_port     = 0
+    protocol    = "-1"
+    cidr_blocks = ["10.0.10.0/24"]
   }
 }
 
-# 3. Web Server Security Group
+# 3. Web Showcase Security Group
 resource "aws_security_group" "web_sg" {
-  name_prefix = "capstone_web_sg_"
+  name        = "devsecops-capstone-web-sg"
   description = "Security group for Capstone Web Showcase"
 
   ingress {
@@ -91,10 +96,6 @@ resource "aws_security_group" "web_sg" {
   tags = {
     Name = "DevSecOps-Web-SG"
   }
-
-  lifecycle {
-    create_before_destroy = true
-  }
 }
 
 # 4. Amazon Linux 2023 AMI Lookup
@@ -108,7 +109,7 @@ data "aws_ami" "amazon_linux_2023" {
   }
 }
 
-# 5. EC2 Web Server Instance
+# 5. Guaranteed Single Free Tier Instance
 resource "aws_instance" "web_server" {
   ami                         = data.aws_ami.amazon_linux_2023.id
   instance_type               = "t3.micro"
@@ -190,7 +191,6 @@ resource "aws_instance" "web_server" {
     Name        = "DevSecOps-Showcase-Server"
     Environment = "Production"
     Project     = "MCA-Capstone"
-    Deployment  = "v2-personal-details"
   }
 }
 
