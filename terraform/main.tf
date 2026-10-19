@@ -13,9 +13,9 @@ provider "aws" {
   skip_requesting_account_id  = true
 }
 
-# 1. Private hardened S3 Bucket using bucket_prefix to avoid 409 collisions
+# 1. Private hardened S3 Bucket
 resource "aws_s3_bucket" "financial_data_lake" {
-  bucket_prefix = "corp-financial-records-"
+  bucket_prefix = "corp-fin-data-"
 
   tags = {
     Environment = "Production"
@@ -49,7 +49,7 @@ resource "aws_s3_bucket_public_access_block" "s3_block" {
   restrict_public_buckets = true
 }
 
-# 2. Hardened Management Security Group using name_prefix
+# 2. Hardened Management Security Group
 resource "aws_security_group" "management_ssh" {
   name_prefix = "allow_management_ssh_"
   description = "Restricted corporate SSH access"
@@ -67,7 +67,7 @@ resource "aws_security_group" "management_ssh" {
   }
 }
 
-# 3. Web Server Security Group using name_prefix
+# 3. Web Server Security Group
 resource "aws_security_group" "web_sg" {
   name_prefix = "capstone_web_sg_"
   description = "Security group for Capstone Web Showcase"
@@ -114,6 +114,7 @@ resource "aws_instance" "web_server" {
   instance_type               = "t3.micro"
   vpc_security_group_ids      = [aws_security_group.web_sg.id]
   associate_public_ip_address = true
+  user_data_replace_on_change = true
 
   root_block_device {
     encrypted   = true
@@ -123,12 +124,13 @@ resource "aws_instance" "web_server" {
 
   user_data = <<-EOF
               #!/bin/bash
+              set -e
               dnf update -y
               dnf install -y httpd
               systemctl start httpd
               systemctl enable httpd
 
-              cat <<'HTML' > /var/www/html/index.html
+              cat << 'HTML' > /var/www/html/index.html
               <!DOCTYPE html>
               <html lang="en">
               <head>
@@ -140,6 +142,9 @@ resource "aws_instance" "web_server" {
                       .container { max-width: 900px; margin: auto; background: #1e293b; border-radius: 12px; padding: 32px; box-shadow: 0 10px 25px rgba(0,0,0,0.5); border: 1px solid #334155; }
                       h1 { color: #38bdf8; border-bottom: 2px solid #334155; padding-bottom: 12px; margin-top: 0; }
                       .badge { display: inline-block; padding: 6px 14px; background: #22c55e; color: #0f172a; font-weight: bold; border-radius: 9999px; font-size: 14px; margin-bottom: 20px; }
+                      .student-info { background: #0f172a; padding: 18px; border-radius: 8px; margin-bottom: 24px; border-left: 4px solid #f97316; }
+                      .student-info p { margin: 6px 0; font-size: 15px; }
+                      .student-info strong { color: #38bdf8; }
                       table { width: 100%; border-collapse: collapse; margin-top: 20px; }
                       th, td { text-align: left; padding: 12px; border-bottom: 1px solid #334155; }
                       th { background-color: #0f172a; color: #94a3b8; }
@@ -151,6 +156,13 @@ resource "aws_instance" "web_server" {
                   <div class="container">
                       <span class="badge">PIPELINE EXECUTION: PASSED</span>
                       <h1>Automated DevSecOps Pipeline Showcase</h1>
+                      
+                      <div class="student-info">
+                          <p><strong>Student Name:</strong> Vikas Rawat</p>
+                          <p><strong>Registration No.:</strong> 324200509</p>
+                          <p><strong>Programme:</strong> Master of Computer Applications (MCA)</p>
+                      </div>
+
                       <p><strong>Project Title:</strong> Design and Implementation of an Automated DevSecOps Pipeline using Policy-as-Code and Continuous Security Scanning</p>
                       
                       <h3>Pipeline Gate Verification Matrix</h3>
@@ -169,12 +181,16 @@ resource "aws_instance" "web_server" {
               </body>
               </html>
               HTML
+
+              chmod 644 /var/www/html/index.html
+              systemctl restart httpd
               EOF
 
   tags = {
     Name        = "DevSecOps-Showcase-Server"
     Environment = "Production"
     Project     = "MCA-Capstone"
+    Deployment  = "v2-personal-details"
   }
 }
 
